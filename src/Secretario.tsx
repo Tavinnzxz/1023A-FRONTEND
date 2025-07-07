@@ -9,6 +9,7 @@
 
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import './Secretario.css';
 
 interface SecretarioState {
@@ -20,6 +21,7 @@ interface SecretarioState {
 
 
 function Secretario() {
+    const navigate = useNavigate();
     const [idSecretario, setIdSecretario] = useState("");
     const [nomeSecretario, setNomeSecretario] = useState("");
     const [salarioSecretario, setSalarioSecretario] = useState("");
@@ -108,7 +110,7 @@ function Secretario() {
                 <div className="logo">Cadastro de Secretários</div>
                 <nav>
                     <ul>
-                        <li><a href="#">Início</a></li>
+                        <li><button className="btn-inicio" onClick={() => navigate('/menu-cadastro')}>Início</button></li>
                         <li><a href="#">Secretários</a></li>
                         <li><a href="#">Sobre</a></li>
                         <li><a href="#">Contato</a></li>

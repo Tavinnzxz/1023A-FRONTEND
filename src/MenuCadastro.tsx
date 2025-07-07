@@ -20,6 +20,12 @@ function MenuCadastro() {
                 <button onClick={() => navigate('/cadastro-secretario')}>
                     Cadastro de Secretários
                 </button>
+                <button onClick={() => navigate('/todos-cadastros')}>
+                    Ver Todos os Cadastros
+                </button>
+                <button onClick={() => navigate('/PaginaLogin')} style={{marginTop: '1rem', background: '#888', color: 'white'}}>
+                    Voltar para Login
+                </button>
             </div>
         </div>
     );

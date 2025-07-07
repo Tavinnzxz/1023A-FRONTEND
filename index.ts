@@ -1,10 +1,18 @@
-import mysql, { Connection, ConnectionOptions } from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 import fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 
 const app = fastify();
 
-app.register(cors);
+await app.register(cors, { origin: true });
+
+// Interface para tipar os dados do usuário
+interface Usuario {
+  id?: string; 
+  nome: string;
+  sobrenome: string;
+  cidade: string;
+}
 
 // Rota para verificar se o servidor está funcionando 
 app.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -12,26 +20,26 @@ app.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
 });
 
 // Rota para salvar dados do formulário de pessoa
-app.post('/produtos', async (request: FastifyRequest, reply: FastifyReply) => {
-  const { id, nome, preco, categoria} = request.body as any;
+app.post('/usuarios', async (request: FastifyRequest<{ Body: Usuario }>, reply: FastifyReply) => {
+  const { nome, sobrenome, cidade } = request.body;
 
   try {
     const conn = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
       password: '',
-      database: 'atividade',
+      database: 'Atividade',
       port: 3306,
     });
 
-    // Inserir na tabela pessoa
+    // Inserir na tabela usuarios
     await conn.query(
-      "INSERT INTO produtos (id, nome, preco, categoria) VALUES (?, ?, ?, ?)",
-      [id, nome, preco, categoria]
+      "INSERT INTO usuarios (nome, sobrenome, cidade) VALUES (?, ?, ?)",
+      [nome, sobrenome, cidade]
     );
 
     await conn.end();
-    reply.status(200).send({ mensagem: "Cliente cadastrado com sucesso!" });
+    reply.status(200).send({ mensagem: "Usuário cadastrado com sucesso!" });
   } catch (erro: any) {
     console.log(`❌ Deu erro! :` + erro);
     if (erro.code === "ECONNREFUSED") {
@@ -52,42 +60,11 @@ app.post('/produtos', async (request: FastifyRequest, reply: FastifyReply) => {
     } else if (erro.code === 'ER_DUP_ENTRY') {
       console.log("Usuário já existente");
       reply.status(400).send({ mensagem: "Usuário já existente" });
-    } 
-    else if (erro.code === 'ER_BAD_FIELD_ERROR') {
+    } else if (erro.code === 'ER_BAD_FIELD_ERROR') {
       console.log("❌ ERRO: Você tem um erro na busca por um campo que não existe");
       reply.status(400).send({ mensagem: "❌ ERRO: Você tem um erro na busca por um campo que não existe" });
     } else {
       console.log(erro);
-      reply.status(400).send({ mensagem: "❌ ERRO: Não identificado" });
-    }
-  }
-});
-
-// Rota para buscar produtos cadastrados
-app.get('/produtos', async (request: FastifyRequest, reply: FastifyReply) => {
-  try {
-    const conn = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '',
-      database: 'atividade',
-      port: 3306,
-    });
-
-    // Consultar todos os produtos na tabela "produto"
-    const [rows] = await conn.query("SELECT * FROM produtos");
-    await conn.end();
-
-    reply.status(200).send(rows);
-  } catch (erro: any) {
-    console.log(`❌ Deu erro! :` + erro);
-    if (erro.code === "ECONNREFUSED") {
-      reply.status(400).send({ mensagem: "❌ ERRO: LIGUE O LARAGON => Conexão recusada" });
-    } else if (erro.code === 'ER_BAD_DB_ERROR') {
-      reply.status(400).send({ mensagem: "❌ ERRO: CRIE UM BANCO DE DADOS COM O NOME DEFINIDO NA CONEXÃO => Conexão não encontrada" });
-    } else if (erro.code === 'ER_NO_SUCH_TABLE') {
-      reply.status(400).send({ mensagem: "❌ ERRO: Você deve criar a tabela com o mesmo nome da sua QUERY" });
-    } else {
       reply.status(400).send({ mensagem: "❌ ERRO: Não identificado" });
     }
   }
@@ -100,7 +77,7 @@ app.get('/usuarios', async (request: FastifyRequest, reply: FastifyReply) => {
       host: 'localhost',
       user: 'root',
       password: '',
-      database: 'atividade',
+      database: 'Atividade',
       port: 3306,
     });
 
@@ -123,6 +100,144 @@ app.get('/usuarios', async (request: FastifyRequest, reply: FastifyReply) => {
   }
 });
 
+// Interface para tipar os dados do funcionário
+type Funcionario = {
+  idFuncionario?: number;
+  nomeFuncionario: string;
+  salarioFuncionario: number;
+  cargoFuncionario: string;
+};
+
+// Rota para cadastrar funcionário
+app.post('/funcionarios', async (request: FastifyRequest<{ Body: Funcionario }>, reply: FastifyReply) => {
+  const { nomeFuncionario, salarioFuncionario, cargoFuncionario } = request.body;
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    const [result]: any = await conn.query(
+      "INSERT INTO funcionarios (nomeFuncionario, salarioFuncionario, cargoFuncionario) VALUES (?, ?, ?)",
+      [nomeFuncionario, salarioFuncionario, cargoFuncionario]
+    );
+    // Retorna o funcionário criado (com id)
+    const [rows]: any = await conn.query("SELECT * FROM funcionarios WHERE idFuncionario = ?", [result.insertId]);
+    await conn.end();
+    reply.status(201).send(rows[0]);
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao cadastrar funcionário." });
+  }
+});
+
+// Rota para listar funcionários
+app.get('/funcionarios', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    const [rows] = await conn.query("SELECT * FROM funcionarios");
+    await conn.end();
+    reply.status(200).send(rows);
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao buscar funcionários." });
+  }
+});
+
+// Rota para excluir funcionário
+app.delete('/funcionarios/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  const { id } = request.params;
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    await conn.query("DELETE FROM funcionarios WHERE idFuncionario = ?", [id]);
+    await conn.end();
+    reply.status(200).send({ mensagem: "Funcionário excluído com sucesso!" });
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao excluir funcionário." });
+  }
+});
+
+// Interface para tipar os dados do gerente
+type Gerente = {
+  idGerente?: number;
+  nomeGerente: string;
+  salarioGerente: number;
+  departamentoGerente: string;
+};
+
+// Rota para cadastrar gerente
+app.post('/gerente', async (request: FastifyRequest<{ Body: Gerente }>, reply: FastifyReply) => {
+  const { nomeGerente, salarioGerente, departamentoGerente } = request.body;
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    const [result]: any = await conn.query(
+      "INSERT INTO gerente (nomeGerente, salarioGerente, departamentoGerente) VALUES (?, ?, ?)",
+      [nomeGerente, salarioGerente, departamentoGerente]
+    );
+    // Retorna o gerente criado (com id)
+    const [rows]: any = await conn.query("SELECT * FROM gerente WHERE idGerente = ?", [result.insertId]);
+    await conn.end();
+    reply.status(201).send(rows[0]);
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao cadastrar gerente." });
+  }
+});
+
+// Rota para listar gerentes
+app.get('/gerente', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    const [rows] = await conn.query("SELECT * FROM gerente");
+    await conn.end();
+    reply.status(200).send(rows);
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao buscar gerentes." });
+  }
+});
+
+// Rota para excluir gerente
+app.delete('/gerente/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  const { id } = request.params;
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    await conn.query("DELETE FROM gerente WHERE idGerente = ?", [id]);
+    await conn.end();
+    reply.status(200).send({ mensagem: "Gerente excluído com sucesso!" });
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao excluir gerente." });
+  }
+});
+
 // Iniciar o servidor
 app.listen({ port: 8000 }, (err, address) => {
   if (err) {
@@ -131,10 +246,3 @@ app.listen({ port: 8000 }, (err, address) => {
   }
   console.log(`Server listening at ${address}`);
 });
-
-interface Produto {
-  itemId: string;
-  itemNome: string;
-  itemDescricao: string;
-  itemPreco: string;
-}

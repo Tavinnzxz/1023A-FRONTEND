@@ -1,9 +1,10 @@
 //1 - Criar tela inicial para login de administrador 
 //2 -criar página que tenha 4 botões para levar para as páginas ( cadastro de funcionários, cadastro de cliente, cadastro de gerentes e cadastro de secretário)
 //3 - CRIAR AS PÁGINAS
-//4 - bonus - tentar criar página que mostre todos os cadastrados 
+//4 - bonus - tentar criar página que mostre todos os cadastrados alisson
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import './Funcionario.css';
 
 interface GerenteState {
@@ -14,6 +15,7 @@ interface GerenteState {
 }
 
 function Gerente() {
+    const navigate = useNavigate();
     const [idGerente, setIdGerente] = useState("");
     const [nomeGerente, setNomeGerente] = useState("");
     const [salarioGerente, setSalarioGerente] = useState("");
@@ -25,7 +27,7 @@ function Gerente() {
         const buscaDados = async () => {
             try {
                 const resultado = await fetch('http://localhost:8000/gerente');
-                if (resultado.status === 200) {
+                if (resultado.status === 200 || resultado.status === 201) {
                     const dados = await resultado.json();
                     setGerentes(dados);
                 }
@@ -40,19 +42,32 @@ function Gerente() {
         buscaDados();
     }, []);
 
-    function TrataCadastro(event: React.FormEvent<HTMLFormElement>) {
+    async function TrataCadastro(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        const novoGerente: GerenteState = {
-            idGerente: parseInt(idGerente) || Date.now(),
+        const novoGerente = {
             nomeGerente: nomeGerente,
             salarioGerente: parseFloat(salarioGerente),
             departamentoGerente: departamentoGerente
         };
 
-        setGerentes([...gerentes, novoGerente]);
+        try {
+            const resposta = await fetch('http://localhost:8000/gerente', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(novoGerente)
+            });
+            if (resposta.status === 201 || resposta.status === 200) {
+                const gerenteCriado = await resposta.json();
+                setGerentes([...gerentes, gerenteCriado]);
+                setMensagem('Gerente cadastrado com sucesso!');
+            } else {
+                setMensagem('Erro ao cadastrar gerente.');
+            }
+        } catch (erro) {
+            setMensagem('Erro de conexão com o backend.');
+        }
 
-        // Limpa os campos do formulário
         setIdGerente("");
         setNomeGerente("");
         setSalarioGerente("");
@@ -98,7 +113,7 @@ function Gerente() {
                 <div className="logo">Cadastro de Gerentes</div>
                 <nav>
                     <ul>
-                        <li><a href="#">Início</a></li>
+                        <li><button className="btn-inicio" onClick={() => navigate('/menu-cadastro')}>Início</button></li>
                         <li><a href="#">Gerentes</a></li>
                         <li><a href="#">Sobre</a></li>
                         <li><a href="#">Contato</a></li>
