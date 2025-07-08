@@ -1,11 +1,7 @@
-//1 - Criar tela inicial para login de administrador 
-//2 -criar página que tenha 4 botões para levar para as páginas ( cadastro de funcionários, cadastro de cliente, cadastro de gerentes e cadastro de secretário)
-//3 - CRIAR AS PÁGINAS
-//4 - bonus - tentar criar página que mostre todos os cadastrados alisson
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import './Funcionario.css';
+import GerenteCard from "./GerenteCard.tsx";
+import './Gerente.css';
 
 interface GerenteState {
     idGerente: number,
@@ -22,9 +18,11 @@ function Gerente() {
     const [departamentoGerente, setDepartamentoGerente] = useState("");
     const [mensagem, setMensagem] = useState("");
     const [gerentes, setGerentes] = useState<GerenteState[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const buscaDados = async () => {
+            setLoading(true);
             try {
                 const resultado = await fetch('http://localhost:8000/gerente');
                 if (resultado.status === 200 || resultado.status === 201) {
@@ -38,6 +36,7 @@ function Gerente() {
             } catch (erro) {
                 setMensagem("Fetch não encontrado");
             }
+            setLoading(false);
         };
         buscaDados();
     }, []);
@@ -45,7 +44,17 @@ function Gerente() {
     async function TrataCadastro(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
+        if (!nomeGerente || !salarioGerente || !departamentoGerente) {
+            setMensagem("Preencha todos os campos obrigatórios.");
+            return;
+        }
+        if (parseFloat(salarioGerente) < 0) {
+            setMensagem("Salário não pode ser negativo.");
+            return;
+        }
+
         const novoGerente = {
+            idGerente: idGerente ? Number(idGerente) : undefined,
             nomeGerente: nomeGerente,
             salarioGerente: parseFloat(salarioGerente),
             departamentoGerente: departamentoGerente
@@ -90,7 +99,6 @@ function Gerente() {
         setDepartamentoGerente(event.target.value);
     }
 
-    // Função para excluir gerente
     const excluirGerente = async (id: number) => {
         try {
             const resposta = await fetch(`http://localhost:8000/gerente/${id}`, {
@@ -108,115 +116,72 @@ function Gerente() {
     };
 
     return (
-        <div className="app">
-            <header>
-                <div className="logo">Cadastro de Gerentes</div>
-                <nav>
-                    <ul>
-                        <li><button className="btn-inicio" onClick={() => navigate('/menu-cadastro')}>Início</button></li>
-                        <li><a href="#">Gerentes</a></li>
-                        <li><a href="#">Sobre</a></li>
-                        <li><a href="#">Contato</a></li>
-                    </ul>
-                </nav>
-            </header>
+        <div className="gerente-container">
+            <h1 className="gerente-titulo">Cadastro de Gerentes</h1>
+            <button className="gerente-botao" onClick={() => navigate('/menu-cadastro')}>Início</button>
+            {mensagem && <div className="mensagem"><p>{mensagem}</p></div>}
 
-            <main>
-                {mensagem && 
-                    <div className="mensagem">
-                        <p>{mensagem}</p>
-                    </div>
-                }
-
-                <div className="container-cadastro">
-                    <h2>Cadastrar Novo Gerente</h2>
-                    <form onSubmit={TrataCadastro}>
-                        <div className="form-group">
-                            <label htmlFor="idGerente">ID:</label>
-                            <input
-                                type="text"
-                                id="idGerente"
-                                value={idGerente}
-                                onChange={trataIdGerente}
-                                placeholder="Digite o ID"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="nomeGerente">Nome do Gerente:</label>
-                            <input
-                                type="text"
-                                id="nomeGerente"
-                                value={nomeGerente}
-                                onChange={trataNomeGerente}
-                                placeholder="Digite o nome"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="salarioGerente">Salário (R$):</label>
-                            <input
-                                type="number"
-                                id="salarioGerente"
-                                value={salarioGerente}
-                                onChange={trataSalarioGerente}
-                                placeholder="Digite o salário"
-                                step="0.01"
-                                min="0"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="departamentoGerente">Departamento:</label>
-                            <input
-                                type="text"
-                                id="departamentoGerente"
-                                value={departamentoGerente}
-                                onChange={trataDepartamentoGerente}
-                                placeholder="Digite o departamento"
-                                required
-                            />
-                        </div>
-
-                        <button type="submit" className="btn-cadastrar">
-                            Cadastrar Gerente
-                        </button>
-                    </form>
+            <form onSubmit={TrataCadastro}>
+                <div className="form-group">
+                    <label htmlFor="idGerente">ID:</label>
+                    <input
+                        type="text"
+                        id="idGerente"
+                        value={idGerente}
+                        onChange={trataIdGerente}
+                        placeholder="Digite o ID"
+                    />
                 </div>
-
-                <div className="container-listagem">
-                    <h2>Lista de Gerentes</h2>
-
-                    {gerentes.length === 0 ? (
-                        <p className="sem-produtos">Nenhum gerente cadastrado ainda.</p>
-                    ) : (
-                        <div className="produtos-grid">
-                            {gerentes.map(gerente => (
-                                <div className="produto-card" key={gerente.idGerente}>
-                                    <div className="produto-header">
-                                        <span className="produto-id">#{gerente.idGerente}</span>
-                                        <span className="produto-categoria">{gerente.departamentoGerente}</span>
-                                    </div>
-                                    <h3 className="produto-nome">{gerente.nomeGerente}</h3>
-                                    <div className="produto-preco">
-                                        R$ {gerente.salarioGerente}
-                                    </div>
-                                    <button className="btn-detalhes">Ver Detalhes</button>
-                                    <button className="btn-excluir" style={{marginLeft: '10px', background: '#e74c3c', color: 'white'}} onClick={() => excluirGerente(gerente.idGerente)}>
-                                        Excluir
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div className="form-group">
+                    <label htmlFor="nomeGerente">Nome do Gerente:</label>
+                    <input
+                        type="text"
+                        id="nomeGerente"
+                        value={nomeGerente}
+                        onChange={trataNomeGerente}
+                        placeholder="Digite o nome"
+                        required
+                    />
                 </div>
-            </main>
+                <div className="form-group">
+                    <label htmlFor="salarioGerente">Salário:</label>
+                    <input
+                        type="number"
+                        id="salarioGerente"
+                        value={salarioGerente}
+                        onChange={trataSalarioGerente}
+                        placeholder="Digite o salário"
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="departamentoGerente">Departamento:</label>
+                    <input
+                        type="text"
+                        id="departamentoGerente"
+                        value={departamentoGerente}
+                        onChange={trataDepartamentoGerente}
+                        placeholder="Digite o departamento"
+                        required
+                    />
+                </div>
+                <button type="submit" className="gerente-botao">Cadastrar Gerente</button>
+            </form>
 
-            <footer>
-                <p>&copy; {new Date().getFullYear()} Cadastro de Gerentes. Todos os direitos reservados.</p>
-            </footer>
+            <h2 className="gerente-titulo" style={{fontSize: "1.5rem"}}>Gerentes Cadastrados</h2>
+            {loading ? (
+                <p>Carregando...</p>
+            ) : gerentes.length === 0 ? (
+                <p>Nenhum gerente cadastrado ainda.</p>
+            ) : (
+                gerentes.map(gerente => (
+                    <GerenteCard
+                        key={gerente.idGerente}
+                        gerente={gerente}
+                        onExcluir={excluirGerente}
+                    />
+                ))
+            )}
         </div>
     );
 }

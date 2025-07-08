@@ -1,3 +1,4 @@
+
 import mysql from 'mysql2/promise';
 import fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
@@ -21,7 +22,7 @@ app.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
 
 // Rota para salvar dados do formulário de pessoa
 app.post('/usuarios', async (request: FastifyRequest<{ Body: Usuario }>, reply: FastifyReply) => {
-  const { nome, sobrenome, cidade } = request.body;
+  const {id, nome, sobrenome, cidade } = request.body;
 
   try {
     const conn = await mysql.createConnection({
@@ -34,8 +35,8 @@ app.post('/usuarios', async (request: FastifyRequest<{ Body: Usuario }>, reply: 
 
     // Inserir na tabela usuarios
     await conn.query(
-      "INSERT INTO usuarios (nome, sobrenome, cidade) VALUES (?, ?, ?)",
-      [nome, sobrenome, cidade]
+      "INSERT INTO usuarios (id, nome, sobrenome, cidade) VALUES (?, ?, ?, ?)",
+      [id, nome, sobrenome, cidade]
     );
 
     await conn.end();
@@ -110,7 +111,7 @@ type Funcionario = {
 
 // Rota para cadastrar funcionário
 app.post('/funcionarios', async (request: FastifyRequest<{ Body: Funcionario }>, reply: FastifyReply) => {
-  const { nomeFuncionario, salarioFuncionario, cargoFuncionario } = request.body;
+  const { idFuncionario, nomeFuncionario, salarioFuncionario, cargoFuncionario } = request.body;
   try {
     const conn = await mysql.createConnection({
       host: 'localhost',
@@ -119,12 +120,21 @@ app.post('/funcionarios', async (request: FastifyRequest<{ Body: Funcionario }>,
       database: 'Atividade',
       port: 3306,
     });
-    const [result]: any = await conn.query(
-      "INSERT INTO funcionarios (nomeFuncionario, salarioFuncionario, cargoFuncionario) VALUES (?, ?, ?)",
-      [nomeFuncionario, salarioFuncionario, cargoFuncionario]
-    );
+    let result: any;
+    if (idFuncionario) {
+      result = await conn.query(
+        "INSERT INTO funcionarios (idFuncionario, nomeFuncionario, salarioFuncionario, cargoFuncionario) VALUES (?, ?, ?, ?)",
+        [idFuncionario, nomeFuncionario, salarioFuncionario, cargoFuncionario]
+      );
+    } else {
+      result = await conn.query(
+        "INSERT INTO funcionarios (idFuncionario, nomeFuncionario, salarioFuncionario, cargoFuncionario) VALUES (?, ?, ?, ?)",
+        [idFuncionario, nomeFuncionario, salarioFuncionario, cargoFuncionario]
+      );
+    }
     // Retorna o funcionário criado (com id)
-    const [rows]: any = await conn.query("SELECT * FROM funcionarios WHERE idFuncionario = ?", [result.insertId]);
+    const insertedId = idFuncionario ? idFuncionario : result[0].insertId;
+    const [rows]: any = await conn.query("SELECT * FROM funcionarios WHERE idFuncionario = ?", [insertedId]);
     await conn.end();
     reply.status(201).send(rows[0]);
   } catch (erro: any) {
@@ -179,7 +189,7 @@ type Gerente = {
 
 // Rota para cadastrar gerente
 app.post('/gerente', async (request: FastifyRequest<{ Body: Gerente }>, reply: FastifyReply) => {
-  const { nomeGerente, salarioGerente, departamentoGerente } = request.body;
+  const { idGerente, nomeGerente, salarioGerente, departamentoGerente } = request.body;
   try {
     const conn = await mysql.createConnection({
       host: 'localhost',
@@ -188,12 +198,21 @@ app.post('/gerente', async (request: FastifyRequest<{ Body: Gerente }>, reply: F
       database: 'Atividade',
       port: 3306,
     });
-    const [result]: any = await conn.query(
-      "INSERT INTO gerente (nomeGerente, salarioGerente, departamentoGerente) VALUES (?, ?, ?)",
-      [nomeGerente, salarioGerente, departamentoGerente]
-    );
+    let result: any;
+    if (idGerente) {
+      result = await conn.query(
+        "INSERT INTO gerente (idGerente, nomeGerente, salarioGerente, departamentoGerente) VALUES (?, ?, ?, ?)",
+        [idGerente, nomeGerente, salarioGerente, departamentoGerente]
+      );
+    } else {
+      result = await conn.query(
+        "INSERT INTO gerente (idGerente, nomeGerente, salarioGerente, departamentoGerente) VALUES (?, ?, ?, ?)",
+        [idGerente, nomeGerente, salarioGerente, departamentoGerente]
+      );
+    }
     // Retorna o gerente criado (com id)
-    const [rows]: any = await conn.query("SELECT * FROM gerente WHERE idGerente = ?", [result.insertId]);
+    const insertedId = idGerente ? idGerente : result[0].insertId;
+    const [rows]: any = await conn.query("SELECT * FROM gerente WHERE idGerente = ?", [insertedId]);
     await conn.end();
     reply.status(201).send(rows[0]);
   } catch (erro: any) {
@@ -245,4 +264,81 @@ app.listen({ port: 8000 }, (err, address) => {
     process.exit(1);
   }
   console.log(`Server listening at ${address}`);
+});
+
+// Interface para tipar os dados do secretário
+type Secretario = {
+  idSecretario?: number;
+  nomeSecretario: string;
+  salarioSecretario: number;
+  setorSecretario: string;
+};
+
+// Rota para cadastrar secretário
+app.post('/secretarios', async (request: FastifyRequest<{ Body: Secretario }>, reply: FastifyReply) => {
+  const { idSecretario, nomeSecretario, salarioSecretario, setorSecretario } = request.body;
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    let result: any;
+    if (idSecretario) {
+      result = await conn.query(
+        "INSERT INTO secretarios (idSecretario, nomeSecretario, salarioSecretario, setorSecretario) VALUES (?, ?, ?, ?)",
+        [idSecretario, nomeSecretario, salarioSecretario, setorSecretario]
+      );
+    } else {
+      result = await conn.query(
+        "INSERT INTO secretarios (nomeSecretario, salarioSecretario, setorSecretario) VALUES (?, ?, ?)",
+        [nomeSecretario, salarioSecretario, setorSecretario]
+      );
+    }
+    const insertedId = idSecretario ? idSecretario : result[0].insertId;
+    const [rows]: any = await conn.query("SELECT * FROM secretarios WHERE idSecretario = ?", [insertedId]);
+    await conn.end();
+    reply.status(201).send(rows[0]);
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao cadastrar secretário." });
+  }
+});
+
+// Rota para listar secretários
+app.get('/secretarios', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    const [rows] = await conn.query("SELECT * FROM secretarios");
+    await conn.end();
+    reply.status(200).send(rows);
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao buscar secretários." });
+  }
+});
+
+// Rota para excluir secretário
+app.delete('/secretarios/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  const { id } = request.params;
+  try {
+    const conn = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'Atividade',
+      port: 3306,
+    });
+    await conn.query("DELETE FROM secretarios WHERE idSecretario = ?", [id]);
+    await conn.end();
+    reply.status(200).send({ mensagem: "Secretário excluído com sucesso!" });
+  } catch (erro: any) {
+    reply.status(400).send({ mensagem: "Erro ao excluir secretário." });
+  }
 });

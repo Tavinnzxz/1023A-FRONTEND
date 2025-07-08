@@ -1,63 +1,45 @@
-.menu-cadastro {
+.menu-cadastro-container {
+    background: url('https://preview.redd.it/104mtc98lr351.gif?width=500&auto=webp&s=530ff62583fc8623bad4b64e53a5d0283171e7ab') no-repeat fixed;
+    background-size: 1000px;
+    height: 100vh;
+    width: 100vw;
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    background-color: #f5f5f5;
+    align-items: center;
+}
+
+.menu-cadastro {
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 2rem;
-    font-family: 'Arial', sans-serif;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
 }
 
 .menu-cadastro h2 {
+    margin-bottom: 1.5rem;
     color: #333;
-    margin-bottom: 2rem;
-    font-size: 2rem;
-    text-align: center;
 }
 
 .botoes-cadastro {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    width: 100%;
-    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
 }
 
 .botoes-cadastro button {
-    padding: 1.2rem 1.5rem;
-    font-size: 1.1rem;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 5px;
     background-color: #4CAF50;
     color: white;
-    border: none;
-    border-radius: 8px;
+    font-size: 1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
 }
 
 .botoes-cadastro button:hover {
     background-color: #45a049;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-}
-
-.botoes-cadastro button:active {
-    transform: translateY(1px);
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .botoes-cadastro {
-        grid-template-columns: 1fr;
-    }
-    
-    .menu-cadastro h2 {
-        font-size: 1.5rem;
-    }
-    
-    .botoes-cadastro button {
-        padding: 1rem;
-        font-size: 1rem;
-    }
 }
